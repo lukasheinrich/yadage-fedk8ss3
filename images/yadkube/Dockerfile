@@ -18,4 +18,9 @@ RUN pip install kubernetes
 RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.12.0/bin/linux/amd64/kubectl && \
     mv kubectl /usr/local/bin && \
     chmod +x /usr/local/bin/kubectl
-RUN apk add jq
+RUN apk add jq util-linux font-bitstream-type1
+RUN apk add build-base
+RUN curl -sSL https://github.com/google/jsonnet/archive/v0.11.2.tar.gz | tar -xzvf - && \
+    cd jsonnet-0.11.2 && \
+    make && mv jsonnet /usr/local/bin && \
+    rm -rf jsonnet-0.11.2

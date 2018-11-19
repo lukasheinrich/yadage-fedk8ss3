@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: runner
+spec:
+  containers:
+  - name: runner
+    image: lukasheinrich/yadkube
+    command: [tail,-f,/dev/null]
+    workingDir: /data
+    volumeMounts:
+    - name: data
+      mountPath: /data
+  dnsPolicy: Default
+  volumes:
+  - name: data
+    persistentVolumeClaim:
+      claimName: mylocal-pvc
+

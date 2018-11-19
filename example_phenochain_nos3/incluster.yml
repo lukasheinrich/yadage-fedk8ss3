@@ -1,0 +1,17 @@
+dataarg: inclworkdir
+backend: kubedirectjob
+backendopts:
+  kubeconfig: incluster
+  path_base: /data/
+  claim_name: mylocal-pvc
+  purepubopts:
+    exec: {logging: false}
+plugins:
+- yadageextresult.pktbackend
+ctrlopts:
+  disable_prepub: true
+initdata:
+  nevents: 100
+workflow: madgraph_delphes.yml
+toplevel: from-github/phenochain
+visualize: true

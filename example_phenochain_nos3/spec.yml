@@ -1,0 +1,16 @@
+dataarg: workdir
+backend: kubedirectjob
+backendopts:
+  path_base: /Users/lukas/Code/yadagedev/yadage-fedk8ss3/example_phenochain_nos3/
+  claim_name: mylocal-pvc
+  purepubopts:
+    exec: {logging: false}
+plugins:
+- yadageextresult.pktbackend
+ctrlopts:
+  disable_prepub: true
+initdata:
+  nevents: 100
+workflow: madgraph_delphes.yml
+toplevel: from-github/phenochain
+visualize: true

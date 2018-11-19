@@ -10,39 +10,24 @@ from .kubesubmitmixin import SubmitToKubeMixin
 log = logging.getLogger(__name__)
 
 class KubernetesBackend(SubmitToKubeMixin):
-    def __init__(self,
-                 resultstore,
-                 kubeconfig = None,
-                 stateopts = None,
-                 resources_opts = None,
-                 resource_labels = None,
-                 svcaccount = 'default',
-                 namespace = 'default',
-                 ):
-        self.svcaccount = svcaccount
+    def __init__(self,**kwargs):
+        self.svcaccount = kwargs.get('svcaccount','default')
 
-        self.namespace  = namespace
-        kwargs = {
-            'namespace': namespace,
-            'kubeconfig': kubeconfig,
-        }
-
+        kwargs.setdefault('namespace','default')
         SubmitToKubeMixin.__init__(self, **kwargs)
 
-        self.stateopts  = stateopts or {'type': 'hostpath'}
+        self.stateopts  = kwargs.get('stateopts',{'type': 'hostpath'})
         self.specopts   = {'type': 'single_ctr_job'}
-        self.resource_labels = resource_labels or {'component': 'yadage'}
-        self.resources_opts = resources_opts or {
+        self.resource_labels = kwargs.get('resource_labels',{'component': 'yadage'})
+        self.resources_opts = kwargs.get('resource_opts',{
             'requests': {
                 'memory': "0.1Gi",
                 'cpu': "100m"
             }
-        }
-        self.ydgconfig =  {
-          "resultstorage": resultstore
-        }
+        })
         self.cvmfs_repos = ['atlas.cern.ch','sft.cern.ch','atlas-condb.cern.ch']
-
+        self.base = kwargs.get('path_base','')
+        self.claim_name =  kwargs.get('claim_name','yadagedata')
 
     def create_kube_resources(self, resources):
         for r in resources:
@@ -54,7 +39,7 @@ class KubernetesBackend(SubmitToKubeMixin):
                     spec        = r['spec']
                 )
                 client.BatchV1Api().create_namespaced_job(self.namespace,thejob)
-                log.info('created job %s', r['metadata']['name'])
+                log.debug('created job %s', r['metadata']['name'])
             elif r['kind'] == 'ConfigMap':
                 cm = client.V1ConfigMap(
                     api_version = 'v1',
@@ -63,7 +48,7 @@ class KubernetesBackend(SubmitToKubeMixin):
                     data = r['data']
                 )
                 client.CoreV1Api().create_namespaced_config_map(self.namespace,cm)
-                log.info('created configmap %s', r['metadata']['name'])
+                log.debug('created configmap %s', r['metadata']['name'])
 
 
     def determine_readiness(self, job_proxy):
@@ -71,7 +56,7 @@ class KubernetesBackend(SubmitToKubeMixin):
         if ready:
             return True
 
-        log.info('actually checking job %s', job_proxy['job_id'])
+        log.debug('actually checking job %s', job_proxy['job_id'])
 
         job_id  = job_proxy['job_id']
         jobstatus = client.BatchV1Api().read_namespaced_job(job_id,self.namespace).status
@@ -79,7 +64,7 @@ class KubernetesBackend(SubmitToKubeMixin):
         job_proxy['last_failed']  = jobstatus.failed
         ready =  job_proxy['last_success'] or job_proxy['last_failed']
         if ready:
-            log.info('job %s is ready and successful. success: %s failed: %s', job_id,
+            log.debug('job %s is ready and successful. success: %s failed: %s', job_id,
                 job_proxy['last_success'], job_proxy['last_failed']
             )
         return ready
@@ -175,16 +160,35 @@ class KubernetesBackend(SubmitToKubeMixin):
 
         container_mounts, volumes = [], []
 
-        container_mounts_state, volumes_state = [
-            { "name": "comms-volume",   "mountPath": sequence_spec['config_mounts']['comms'] },
-            { "name": "workdir-volume", "mountPath": jobspec['local_workdir'] }
-        ], [
-            { "name": "workdir-volume", "emptyDir": {} },
-            { "name": "comms-volume",   "emptyDir": {} }
-        ]
 
-        container_mounts += container_mounts_state
-        volumes          += volumes_state
+
+        for i,ro in enumerate(jobspec['state']['readonly']):
+            subpath = ro.replace(self.base,'')   
+            ctrmnt = {
+                "name": "state",
+                "mountPath": ro,
+                "subPath": subpath,
+            }
+            container_mounts.append(ctrmnt)
+
+        for i,rw in enumerate(jobspec['state']['readwrite']):
+            subpath = rw.replace(self.base,'')   
+            ctrmnt = {
+                "name": "state",
+                "mountPath": rw,
+                "subPath": subpath,
+            }
+            container_mounts.append(ctrmnt)
+
+        volumes.append({
+            "name": "state",
+            "persistentVolumeClaim": {
+                "claimName": self.claim_name,
+                "readOnly": False
+            }
+        })
+
+        # raise RuntimeError(container_mounts, volumes)
 
         if cvmfs:
             container_mounts_cvmfs, volumes_cvmfs = self.cvmfs_binds(self.cvmfs_repos)
@@ -202,30 +206,7 @@ class KubernetesBackend(SubmitToKubeMixin):
             volumes += volumes_pm
             kube_resources.append(pm_cm_spec)
 
-
-        jobconfigname = "wflow-job-config-{}".format(job_uuid)
         jobname = "wflow-job-{}".format(job_uuid)
-        resultfilename = 'result-{}.json'.format(job_uuid)
-
-        jobconfig = copy.deepcopy(jobspec)
-        jobconfig['resultfile'] = resultfilename
-
-        kube_resources.append({
-          "apiVersion": "v1",
-          "kind": "ConfigMap",
-          "data": {
-            "ydgconfig.json": json.dumps(self.ydgconfig),
-            "jobconfig.json": json.dumps(jobconfig)
-          },
-          "metadata": {
-            "name": jobconfigname
-          }
-        })
-
-        configmounts = [{
-            "name": "job-config",
-            "mountPath": sequence_spec['config_mounts']['jobconfig']
-        }]
 
         container_sequence = [{
           "name": seqname,
@@ -233,7 +214,7 @@ class KubernetesBackend(SubmitToKubeMixin):
           "command": sequence_spec[seqname]['cmd'],
           "env": sequence_spec['config_env'] if sequence_spec[seqname]['iscfg'] else [],
           "volumeMounts":  container_mounts + (configmounts if sequence_spec[seqname]['iscfg'] else [])
-        } for seqname in sequence_spec['sequence']]
+        } for seqname in sequence_spec["sequence"]]
 
         kube_resources.append({
           "apiVersion": "batch/v1",
@@ -246,20 +227,18 @@ class KubernetesBackend(SubmitToKubeMixin):
                 "securityContext" : {
                     "runAsUser": 0
                 },
-                "initContainers": container_sequence[:-1],
-                "containers": container_sequence[-1:],
-                "volumes": [{
-                    "name": "job-config",
-                    "configMap": { "name": jobconfigname },
-                }] + volumes
+                "initContainers": [],
+                "containers": container_sequence,
+                "volumes": volumes
               },
               "metadata": { "name": jobname }
             }
           },
           "metadata": { "name": jobname }
         })
+
+        log.debug(json.dumps(kube_resources, indent = 4))
         return {
-            'resultjson': resultfilename,
             'job_id': jobname,
             'resources': kube_resources
         }, kube_resources

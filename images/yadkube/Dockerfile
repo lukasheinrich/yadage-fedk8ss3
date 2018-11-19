@@ -18,3 +18,4 @@ RUN pip install kubernetes
 RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.12.0/bin/linux/amd64/kubectl && \
     mv kubectl /usr/local/bin && \
     chmod +x /usr/local/bin/kubectl
+RUN apk add jq

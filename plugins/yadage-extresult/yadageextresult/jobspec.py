@@ -99,7 +99,7 @@ class DirectJobMakerMixin(object):
         log.debug('rendering process with local pars:  {}'.format(local_pars.json()))
 
         job, env = acquire_job_env(spec, local_pars,state,metadata,packconfig())
-        script = '''cat << 'RECASTJOB' | {}\n{}\RECASTJOB\n'''
+        script = '''cat << 'RECASTJOB' | {}\n{}\nRECASTJOB\n'''
         return {
             'command': job['command'] if 'command' in job else script.format(
                 job['interpreter'],

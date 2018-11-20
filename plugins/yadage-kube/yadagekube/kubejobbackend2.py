@@ -188,8 +188,6 @@ class KubernetesBackend(SubmitToKubeMixin):
             }
         })
 
-        # raise RuntimeError(container_mounts, volumes)
-
         if cvmfs:
             container_mounts_cvmfs, volumes_cvmfs = self.cvmfs_binds(self.cvmfs_repos)
             container_mounts += container_mounts_cvmfs

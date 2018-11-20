@@ -24,7 +24,7 @@ class JobSequenceMakerMixin(object):
         job = build_job(spec, local_pars, None, packconfig())
         log.info(job)
 
-        script = '''cat << 'EOF' | {}\n{}\nEOF\n'''
+        script = '''cat << 'RECASTJOB' | {}\n{}\RECASTJOB\n'''
         return {
             'command': job['command'] if 'command' in job else script.format(
                 job['interpreter'],
@@ -99,7 +99,7 @@ class DirectJobMakerMixin(object):
         log.debug('rendering process with local pars:  {}'.format(local_pars.json()))
 
         job, env = acquire_job_env(spec, local_pars,state,metadata,packconfig())
-        script = '''cat << 'EOF' | {}\n{}\nEOF\n'''
+        script = '''cat << 'RECASTJOB' | {}\n{}\RECASTJOB\n'''
         return {
             'command': job['command'] if 'command' in job else script.format(
                 job['interpreter'],

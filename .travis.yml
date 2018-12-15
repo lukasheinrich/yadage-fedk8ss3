@@ -1,0 +1,27 @@
+sudo: required
+services:
+- docker
+language: python
+python:
+- '3.6'
+install:
+- pip install -U yadage
+- sudo apt-get install golang-1.10-go
+- /usr/lib/go-1.10/bin/go version
+- export GOROOT=/usr/lib/go-1.10
+- /usr/lib/go-1.10/bin/go get sigs.k8s.io/kind
+- curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+- echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee -a /etc/apt/sources.list.d/kubernetes.list
+- sudo apt-get update
+- sudo apt-get install -y kubectl
+- kind create cluster
+- export KUBECONFIG="$(kind get kubeconfig-path --name="1")"
+script:
+- kubectl cluster-info
+- kubectl create -f pv.yml -f pvc.yml -f role.yml
+- kubectl create -f wflow.yml
+- sleep 5
+- kubectl get pods
+- sleep 60
+- kubectl get pods
+- docker exec -it kind-1-control-plane cat /mnt/cifwflow-123/hello_world/hello_world.txt

@@ -16,12 +16,8 @@ install:
 - sudo apt-get install -y kubectl
 - kind create cluster
 - export KUBECONFIG="$(kind get kubeconfig-path --name="1")"
+
+
+
 script:
 - kubectl cluster-info
-- kubectl create -f pv.yml -f pvc.yml -f role.yml
-- kubectl create -f wflow.yml
-- sleep 5
-- kubectl get pods
-- sleep 60
-- kubectl get pods
-- docker exec -it kind-1-control-plane cat /mnt/cifwflow-123/hello_world/hello_world.txt

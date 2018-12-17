@@ -1,0 +1,35 @@
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: wflow-controller
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: wflow-controller
+  template:
+    metadata:
+      labels:
+        app: wflow-controller
+    spec:
+      containers:
+      - name: controller
+        image: python:2.7-alpine
+        command: ["python", "/hooks/sync.py"]
+        volumeMounts:
+        - name: hooks
+          mountPath: /hooks
+      volumes:
+      - name: hooks
+        configMap:
+          name: wflow-controller
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: wflow-controller
+spec:
+  selector:
+    app: wflow-controller
+  ports:
+  - port: 80

@@ -1,0 +1,56 @@
+apiVersion: yadage.github.io/v1
+kind: Workflow
+metadata:
+  name: myflow
+spec:
+  initdata:
+    par: Josi
+  ctrlopts:
+    disable_prepub: true
+  backendopts:
+    path_base: /data/
+    purepubopts:
+      exec:
+        logging: false
+    kubeconfig: incluster
+    claim_name: mylocal-pvc
+  dataarg: cifwflow-0000
+  backend: kubedirectjob
+  visualize: true
+  plugins:
+  - yadageextresult.pktbackend
+  workflow_json:
+    stages:
+    - scheduler:
+        parameters:
+        - value: ! '{workdir}/hello_world.txt'
+          key: outputfile
+        - value:
+            unwrap: true
+            output: par
+            stages: init
+            expression_type: stage-output-selector
+          key: parone
+        step:
+          environment:
+            image: busybox
+            envscript: ''
+            env: {}
+            resources: []
+            par_mounts: []
+            environment_type: docker-encapsulated
+            imagetag: latest
+            workdir: null
+          process:
+            process_type: string-interpolated-cmd
+            cmd: echo Hello {parone} | tee {outputfile}
+          publisher:
+            publisher_type: frompar-pub
+            outputmap:
+              outputfile: outputfile
+        scheduler_type: singlestep-stage
+      dependencies:
+        dependency_type: jsonpath_ready
+        expressions:
+        - init
+      name: hello_world

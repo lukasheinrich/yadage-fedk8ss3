@@ -5,7 +5,11 @@ language: python
 python:
 - '3.6'
 install:
-- pip install -U yadage
+- pip install -U yadage kubernetes
+- cd plugins/yadage-extresult; pip install -e .;cd -
+- cd plugins/yadage-kube; pip install -e .;cd -
+- cd plugins/yadage-objstore; pip install -e .;cd -
+
 - sudo apt-get install golang-1.10-go
 - /usr/lib/go-1.10/bin/go version
 - export GOROOT=/usr/lib/go-1.10

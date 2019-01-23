@@ -5,27 +5,29 @@ language: python
 python:
 - '3.6'
 install:
-- pip install -U yadage kubernetes recast-atlas pyyaml
-- cd plugins/yadage-extresult; pip install -e .;cd -
-- cd plugins/yadage-kube; pip install -e .;cd -
-- cd plugins/yadage-objstore; pip install -e .;cd -
-
-
-- sudo apt-get install golang-1.10-go
-- /usr/lib/go-1.10/bin/go version
-- export GOROOT=/usr/lib/go-1.10
-- /usr/lib/go-1.10/bin/go get sigs.k8s.io/kind
-- curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
-- echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee -a /etc/apt/sources.list.d/kubernetes.list
-- sudo apt-get update
-- sudo apt-get install -y kubectl
-- kind create cluster
+- pip install recast-atlas pyyaml
+# - pip install -U yadage kubernetes recast-atlas pyyaml
 - export KUBECONFIG="$(kind get kubeconfig-path --name="1")"
 - export RECAST_AUTH_USERNAME=lheinric
-- export RECAST_AUTH_PASSWORD=thisisnotmypw
+- export RECAST_AUTH_PASSWORD=thisisnotmypwß
 - eval $(recast auth write --basedir yadageauth)
 - ls -lrt yadageauth
 - cat yadageauth/getkrb.sh
+
+# - cd plugins/yadage-extresult; pip install -e .;cd -
+# - cd plugins/yadage-kube; pip install -e .;cd -
+# - cd plugins/yadage-objstore; pip install -e .;cd -
+
+
+# - sudo apt-get install golang-1.10-go
+# - /usr/lib/go-1.10/bin/go version
+# - export GOROOT=/usr/lib/go-1.10
+# - /usr/lib/go-1.10/bin/go get sigs.k8s.io/kind
+# - curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+# - echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee -a /etc/apt/sources.list.d/kubernetes.list
+# - sudo apt-get update
+# - sudo apt-get install -y kubectl
+# - kind create cluster
 
 # 10565  kind create cluster
 # 10567  k create -f role.yml -f state_kind

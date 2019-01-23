@@ -13,6 +13,7 @@ install:
 - recast auth write --basedir yadageauth
 - ls -lrt yadageauth
 - cat yadageauth/getkrb.sh
+- source yadageauth/getkrb.sh
 
 # - cd plugins/yadage-extresult; pip install -e .;cd -
 # - cd plugins/yadage-kube; pip install -e .;cd -

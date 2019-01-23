@@ -9,10 +9,10 @@ install:
 # - pip install -U yadage kubernetes recast-atlas pyyaml
 - export KUBECONFIG="$(kind get kubeconfig-path --name="1")"
 - export RECAST_AUTH_USERNAME=lheinric
-- export RECAST_AUTH_PASSWORD=thisisnotmypwß
+- export RECAST_AUTH_PASSWORD=thisisnotmypw
 - recast auth write --basedir yadageauth
 - ls -lrt yadageauth
-- cat yadageauth/getkrb.sh
+- cat -e yadageauth/getkrb.sh;echo "---"
 - source yadageauth/getkrb.sh
 
 # - cd plugins/yadage-extresult; pip install -e .;cd -

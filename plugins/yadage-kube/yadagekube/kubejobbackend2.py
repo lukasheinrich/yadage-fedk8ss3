@@ -30,28 +30,6 @@ class KubernetesBackend(SubmitToKubeMixin):
         self.claim_name =  kwargs.get('claim_name','yadagedata')
         self.secrets = kwargs.get('secrets', {'hepauth': 'hepauth'})
 
-    def create_kube_resources(self, resources):
-        for r in resources:
-            if r['kind'] == 'Job':
-                thejob = client.V1Job(
-                    kind        = r['kind'],
-                    api_version = r['apiVersion'],
-                    metadata    = r['metadata'],
-                    spec        = r['spec']
-                )
-                client.BatchV1Api().create_namespaced_job(self.namespace,thejob)
-                log.debug('created job %s', r['metadata']['name'])
-            elif r['kind'] == 'ConfigMap':
-                cm = client.V1ConfigMap(
-                    api_version = 'v1',
-                    kind = r['kind'],
-                    metadata = {'name': r['metadata']['name'], 'namespace': self.namespace, 'labels': self.resource_labels},
-                    data = r['data']
-                )
-                client.CoreV1Api().create_namespaced_config_map(self.namespace,cm)
-                log.debug('created configmap %s', r['metadata']['name'])
-
-
     def determine_readiness(self, job_proxy):
         ready = job_proxy.get('ready',False)
         if ready:
@@ -70,12 +48,6 @@ class KubernetesBackend(SubmitToKubeMixin):
             )
         return ready
 
-    def successful(self,job_proxy):
-        return job_proxy['last_success']
-
-    def fail_info(self,resultproxy):
-        pass
-
     def auth_binds(self,authmount):
         container_mounts = []
         volumes = []
@@ -86,7 +58,8 @@ class KubernetesBackend(SubmitToKubeMixin):
             'secret': {
                 'secretName': self.secrets['hepauth'],
                 'items': [
-                    {'key': 'getkrb.sh',
+                    {
+                    'key': 'getkrb.sh',
                     'path': 'getkrb.sh',
                     'mode': 493 #755
                     }
@@ -165,7 +138,6 @@ class KubernetesBackend(SubmitToKubeMixin):
         cvmfs         = 'CVMFS' in env['resources']
         parmounts     = env['par_mounts']
         auth          = 'GRIDProxy' in env['resources']
-        # raise RuntimeError(auth, env)
         sequence_spec = jobspec['sequence_spec']
 
         container_mounts, volumes = [], []

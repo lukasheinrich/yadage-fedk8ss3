@@ -21,6 +21,7 @@ data:
     workflow: madgraph_delphes.yml
     toplevel: from-github/phenochain
     visualize: true
+    cache: checksums
 ---
 apiVersion: batch/v1
 kind: Job

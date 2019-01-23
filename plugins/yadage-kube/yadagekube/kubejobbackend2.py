@@ -28,6 +28,7 @@ class KubernetesBackend(SubmitToKubeMixin):
         self.cvmfs_repos = ['atlas.cern.ch','sft.cern.ch','atlas-condb.cern.ch']
         self.base = kwargs.get('path_base','')
         self.claim_name =  kwargs.get('claim_name','yadagedata')
+        self.secrets = kwargs.get('secrets', {'hepauth': 'hepauth'})
 
     def create_kube_resources(self, resources):
         for r in resources:
@@ -82,7 +83,15 @@ class KubernetesBackend(SubmitToKubeMixin):
         log.debug('binding auth')
         volumes.append({
             'name': 'hepauth',
-            'secret': yaml.load(open('secret.yml'))
+            'secret': {
+                'secretName': self.secrets['hepauth'],
+                'items': [
+                    {'key': 'getkrb.sh',
+                    'path': 'getkrb.sh',
+                    'mode': 493 #755
+                    }
+                ]
+            }
         })
         container_mounts.append({
             "name": 'hepauth',
@@ -155,7 +164,8 @@ class KubernetesBackend(SubmitToKubeMixin):
         env           = jobspec['spec']['environment']
         cvmfs         = 'CVMFS' in env['resources']
         parmounts     = env['par_mounts']
-        auth          = 'GRIProxy' in env['resources']
+        auth          = 'GRIDProxy' in env['resources']
+        # raise RuntimeError(auth, env)
         sequence_spec = jobspec['sequence_spec']
 
         container_mounts, volumes = [], []

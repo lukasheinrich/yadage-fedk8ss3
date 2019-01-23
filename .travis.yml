@@ -5,7 +5,7 @@ language: python
 python:
 - '3.6'
 install:
-- pip install -U yadage kubernetes
+- pip install -U yadage kubernetes recast-atlas
 - cd plugins/yadage-extresult; pip install -e .;cd -
 - cd plugins/yadage-kube; pip install -e .;cd -
 - cd plugins/yadage-objstore; pip install -e .;cd -
@@ -21,7 +21,14 @@ install:
 - sudo apt-get install -y kubectl
 - kind create cluster
 - export KUBECONFIG="$(kind get kubeconfig-path --name="1")"
-
+- export RECAST_AUTH_USERNAME=lheinric
+- export RECAST_AUTH_PASSWORD=thisisnotmypw
+- eval $(recast auth write --basedir yadageauth)
+- ls -lrt yadageauth
+# 10565  kind create cluster
+# 10567  k create -f role.yml -f state_kind
+# 10568  kubectl create secret generic hepauth --from-file=yadageauth/getkrb.sh
+# 10570  k create -f runner.yml
 
 
 script:

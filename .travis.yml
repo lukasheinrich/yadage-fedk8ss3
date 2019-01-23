@@ -10,7 +10,7 @@ install:
 - export KUBECONFIG="$(kind get kubeconfig-path --name="1")"
 - export RECAST_AUTH_USERNAME=lheinric
 - export RECAST_AUTH_PASSWORD=thisisnotmypwß
-- eval $(recast auth write --basedir yadageauth)
+- recast auth write --basedir yadageauth
 - ls -lrt yadageauth
 - cat yadageauth/getkrb.sh
 

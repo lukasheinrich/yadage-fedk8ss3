@@ -5,7 +5,7 @@ language: python
 python:
 - '3.6'
 install:
-- pip install -U yadage kubernetes recast-atlas
+- pip install -U yadage kubernetes recast-atlas pyyaml
 - cd plugins/yadage-extresult; pip install -e .;cd -
 - cd plugins/yadage-kube; pip install -e .;cd -
 - cd plugins/yadage-objstore; pip install -e .;cd -
@@ -26,6 +26,7 @@ install:
 - eval $(recast auth write --basedir yadageauth)
 - ls -lrt yadageauth
 - cat yadageauth/getkrb.sh
+
 # 10565  kind create cluster
 # 10567  k create -f role.yml -f state_kind
 # 10568  kubectl create secret generic hepauth --from-file=yadageauth/getkrb.sh

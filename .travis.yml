@@ -31,7 +31,7 @@ install:
 - export RECAST_AUTH_PASSWORD=thisisnotmypw
 - eval $(recast auth write --basedir yadageauth)
 - kubectl create secret generic hepauth --from-file=yadageauth/getkrb.sh
-# 10570  k create -f runner.yml
-#- kubectl get secret hepauth -o yaml
+- cat runner.yml |sed 's|lukasheinrich/yadkube|lukasheinrich/yadkube:citest|' > cirunner.yml
 script:
-- kubectl cluster-info
+- kubectl create -f cirunner.yml
+- kubectl get pods

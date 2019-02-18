@@ -7,7 +7,7 @@ import glob2
 
 import yadageobjstore.known_types
 from packtivity.utils import leaf_iterator
-from packtivity.typedleafs import TypedLeafs
+from packtivity import datamodel as pdm
 
 log = logging.getLogger(__name__)
 
@@ -45,7 +45,7 @@ def interpolated_pub_handler(publisher,parameters,state):
         log.info('result value: %s', resultval)
         path.set(result,resultval)
     log.info('returning result: %s', result)
-    return TypedLeafs(result, state.datamodel)
+    return pdm.create(result, state.datamodel)
 
 def fromparpub_handler(spec,parameters,state):
     topublish = {}
@@ -54,7 +54,7 @@ def fromparpub_handler(spec,parameters,state):
         if type(value) == yadageobjstore.known_types.SimpleFile:
             value.local_path = value.local_path.format(workdir = state.local_workdir)
         topublish[targetname] = value
-    return TypedLeafs(topublish, state.datamodel)
+    return pdm.create(topublish, state.datamodel)
 
 def upload_spec(fileobj, state):
     global_path = 'global-'+str(uuid.uuid4())
@@ -70,7 +70,7 @@ def teardown_spec(topublish,state):
             if not value.path:
                 log.info('this has no public path, so we need to upload it %s', value.json())
                 teardown_spec['uploads'].append(upload_spec(value, state))
-            topublish.replace(p,TypedLeafs(value,state.datamodel).json())
+            topublish.replace(p,pdm.create(value,state.datamodel).json())
 
     log.info('topublish:\n%s',topublish.json())
     return teardown_spec

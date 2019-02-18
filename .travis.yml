@@ -22,6 +22,9 @@ install:
 - sudo apt-get install -y kubectl
 - docker build -t lukasheinrich/yadkube:citest -f images/yadkube/Dockerfile .
 - kind create cluster
+- export KUBECONFIG="$(kind get kubeconfig-path)"
+- kubectl cluster-info
+
 - kind load lukasheinrich/yadkube:citest
 - export KUBECONFIG="$(kind get kubeconfig-path --name="1")"
 - export RECAST_AUTH_USERNAME=lheinric

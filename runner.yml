@@ -13,7 +13,7 @@ data:
       purepubopts:
         exec: {logging: false}
     plugins:
-    - yadageextresult.pktbackend
+    - yadagekube.backends
     ctrlopts:
       disable_prepub: true
     initdata:

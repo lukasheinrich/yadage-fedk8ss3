@@ -7,6 +7,7 @@ python:
 env:
 - secure: "Jl5ETYBeZmqMXrgFulL56EgwapDQuKy5+DU2ZK9bAJDd/70yAKpcne4tZo30iyGqhJpdul1pWDmmHjSPvtgC/uqF5wdYdKhJ/7iP13LkoQFwNRFVB2RMUMnM0cSguPwfjlix16H93mGREyraswu2hMcXouufPfNJ9maKEglgAsMDmOHx3nB6bsNG6DUcyJO7DWRuRhEIz3e38alkaucUCm7Fr3zyzJcQ6HTljRyYmjH/pOnY8F6vj1exTikIph/dLc37uVQ6FoqN4Y83AeUZFN0sNX14Ymv406SdksAjbYqCKnhxCHEY2nlJOfUHd6lG1Df6xt9AA9T2tV/Z7DVcqKthdXbpjMQcUnZTtU8OpD10nKSLQcxvtnjSZ5v7sQKCLTy5iCRgSNQ2km+tOCR21PKSlbCjBV2VgEo16JVSfcQZaUuX7miza/jqJeM3WTSwfK0MdZJ4IfU3lC+JuPpp4jIt7nkYVTpEuyzosaNgBHveO7hxVRlEJ0lNu5FqvmWUe6uaFVhn+VYVigU7SgruOdKiUoYjAnoXULCT8tpJ4/+4RJxfr2EBp2G8vrz6wmZWa8+dxx6IfW5WJJO57IACXP4e+/hNV3Kjd6SIIRtlpJoORGPVLScBuapbj09HroPmf5EsPuaOsh6ILG/TEiBIuxCpudlWfoTdYdXvYUNaID8="
 install:
+- python -c 'import os;print(list(os.environ.keys()))'
 - pip install recast-atlas pyyaml
 - pip install -U yadage kubernetes recast-atlas pyyaml
 - cd plugins/yadage-extresult; pip install -e .;cd -

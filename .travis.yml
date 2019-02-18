@@ -33,6 +33,7 @@ install:
 - cat runner.yml |sed 's|lukasheinrich/yadkube|lukasheinrich/yadkube:citest|' > cirunner.yml
 script:
 - kubectl create secret generic hepauth --from-file=yadageauth/getkrb.sh
+- kubectl get -o yaml secret hepauth
 - kubectl create -f crd/pv.yml -f crd/pvc.yml -f crd/role.yml -f storage.yml
 - kubectl create -f cirunner.yml
 - sleep 60

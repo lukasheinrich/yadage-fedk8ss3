@@ -35,4 +35,5 @@ install:
 script:
 - kubectl create -f cirunner.yml
 - kubectl create -f crd/pv.yml -f crd/pvc.yml
+- sleep 15
 - kubectl get pods|grep workflow|awk '{print $1}'|xargs kubectl logs -f

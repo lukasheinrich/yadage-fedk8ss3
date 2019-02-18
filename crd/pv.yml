@@ -18,4 +18,4 @@ spec:
         - key: kubernetes.io/hostname
           operator: In
           values:
-          - kind-1-control-plane
+          - kind-control-plane

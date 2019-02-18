@@ -4,6 +4,8 @@ services:
 language: python
 python:
 - '3.6'
+env:
+- secure: "KEeyqCDPhvV/RpRHJ+0ELy68uIEaKUYBcecQD/eHKreWZXeuDDSOV/WpdSENh6Ivo5+GgNZFgsBf5uv7X0jkgKrqan1En4jVK89BuKahE49FpuSWPaR2AIpXgSTOpLJmAp7HbGk8eVO0PHziEaiRloooWqOPckAl+2NKQOEztOITcqyzjDljHBvnQ7yP2cBt/rS1+dHno+TwsadQypE3HYC6QKEcoaz82ejj/FFfm5YewsMnwv+t0UkvDyv2YcVyhB/0iZX+kmT712YAWOlsQGsJQBqKqq9Z5dUn7hSg62lXURDGjqMnuYHadVuqueJ6WmMlOOhyRfHLxkhvuk2R6xe5GiGyQyGRxI7AMLOaIEM5wypUePKisGRol6PA/zluYmv/FmwHd0jZZh/PYKgLeuZ0wpSx8k/WXBm8pc/RwA/F+wkAohHV7PcDdj97ogVq0/fJ9ZIwyoxOiHzKIcdcIcDEkkDwp+GtW46S3ypEErUR79KkycMrVPPxsXbOtaJuCwsMycqho5u1AjWHOyNv5OwXvejj14DUl7JyyqTJ0Otl9JGSod5hJ0/lhIkToOKzW2vq84iOcdmu6JRJOdKtRuLm3iHWAie6lkWc4gOOxp/nsNUC49zreP3u3fMZbKoIMRbNBAESgcJz3ftJBTayQ3y1b5dvlpTN+9bzn5pU9zw="
 install:
 - pip install recast-atlas pyyaml
 - pip install -U yadage kubernetes recast-atlas pyyaml
@@ -27,13 +29,11 @@ install:
 
 - kind load docker-image lukasheinrich/yadkube:citest
 - export KUBECONFIG="$(kind get kubeconfig-path)"
-- export RECAST_AUTH_USERNAME=lheinric
-- export RECAST_AUTH_PASSWORD=thisisnotmypw
+- export RECAST_AUTH_USERNAME=recast
 - eval $(recast auth write --basedir yadageauth)
 - cat runner.yml |sed 's|lukasheinrich/yadkube|lukasheinrich/yadkube:citest|' > cirunner.yml
 script:
 - kubectl create secret generic hepauth --from-file=yadageauth/getkrb.sh
-- kubectl get -o yaml secret hepauth
 - kubectl create -f crd/pv.yml -f crd/pvc.yml -f crd/role.yml -f storage.yml
 - kubectl create -f cirunner.yml
 - sleep 60

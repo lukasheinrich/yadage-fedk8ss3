@@ -34,6 +34,8 @@ install:
 - cat runner.yml |sed 's|lukasheinrich/yadkube|lukasheinrich/yadkube:citest|' > cirunner.yml
 script:
 - kubectl create -f cirunner.yml
-- kubectl create -f crd/pv.yml -f crd/pvc.yml
+- kubectl create -f crd/pv.yml -f crd/pvc.yml -f storage.yml
 - sleep 15
 - kubectl get pods|grep workflow|awk '{print $1}'|xargs kubectl logs -f
+- kubectl cp storage:/data/inclworkdir workdir
+- cat workdir/delphes/output.lhco

@@ -42,3 +42,11 @@ script:
 - kubectl get pods|grep workflow|awk '{print $1}'|xargs kubectl logs -f
 - kubectl cp storage:/data/inclworkdir workdir
 - cat workdir/delphes/output.lhco
+- cat runner_auth.yml |sed 's|lukasheinrich/yadkube|lukasheinrich/yadkube:citest|' > cirunner.yml
+- kubectl create -f cirunner.yml
+- sleep 60
+- kubectl get pods
+- kubectl get pods|grep workflowauth|awk '{print $1}'|xargs kubectl logs -f
+- kubectl cp storage:/data/inclworkdir_auth workdir_auth
+- cat workdir_auth/krbtest/output.txt
+

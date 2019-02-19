@@ -14,4 +14,3 @@ spec:
    - name: data
      persistentVolumeClaim:
        claimName: mylocal-pvc
-       readOnly: true

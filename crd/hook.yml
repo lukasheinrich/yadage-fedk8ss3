@@ -25,6 +25,8 @@ spec:
         env:
         - name: YADKUBE_IMAGE
           value: lukasheinrich/yadkube:citest
+        - name: YADKUBE_IMAGE_POLICY
+          value: IfNotPresent
 ---
 apiVersion: v1
 kind: Service

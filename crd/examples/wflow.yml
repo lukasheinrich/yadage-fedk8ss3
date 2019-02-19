@@ -6,13 +6,8 @@ spec:
   initdata:
     par: Josi
   toplevel: from-github/testing/busybox-helloworld
-  ctrlopts:
-    disable_prepub: true
   backendopts:
     path_base: /data/
-    purepubopts:
-      exec:
-        logging: false
     kubeconfig: incluster
     claim_name: mylocal-pvc
   dataarg: cifwflow-7889

@@ -33,6 +33,7 @@ def make_desired(name, spec):
                            "yadage-run","-f","/etc/config/workflow.yml"
                         ],
                         "image": os.environ['YADKUBE_IMAGE'],
+                        "imagePullPolicy":  os.environ['YADKUBE_IMAGE_POLICY'],
                         "name": "runner",
                         "volumeMounts": [
                            {

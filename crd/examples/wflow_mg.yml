@@ -9,12 +9,9 @@ spec:
   workflow: madgraph_delphes.yml
   backendopts:
     path_base: /data/
-    purepubopts:
-      exec:
-        logging: false
     kubeconfig: incluster
     claim_name: mylocal-pvc
-  dataarg: cifwflow-1234
+  dataarg: cifwflow-123456
   backend: kubedirectjob
   plugins:
   - yadagekube.backends

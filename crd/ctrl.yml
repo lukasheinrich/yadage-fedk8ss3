@@ -19,4 +19,4 @@ spec:
   hooks:
     sync:
       webhook:
-        url: http://wflow-controller.default/sync
+        url: http://wflow-controller.yadage.svc.cluster.local/sync

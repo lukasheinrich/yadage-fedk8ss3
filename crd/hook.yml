@@ -1,7 +1,13 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: yadage
+---
 apiVersion: apps/v1beta1
 kind: Deployment
 metadata:
   name: wflow-controller
+  namespace: yadage
 spec:
   replicas: 1
   selector:
@@ -24,6 +30,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: wflow-controller
+  namespace: yadage
 spec:
   selector:
     app: wflow-controller

@@ -49,4 +49,9 @@ script:
 - kubectl get pods|grep workflowauth|awk '{print $1}'|xargs kubectl logs -f
 - kubectl cp storage:/data/inclworkdir_auth workdir_auth
 - cat workdir_auth/krbtest/output.txt
-
+- kubectl create -f https://raw.githubusercontent.com/GoogleCloudPlatform/metacontroller/master/manifests/metacontroller-namespace.yaml -f https://raw.githubusercontent.com/GoogleCloudPlatform/metacontroller/master/manifests/metacontroller-rbac.yaml -f https://raw.githubusercontent.com/GoogleCloudPlatform/metacontroller/master/manifests/metacontroller.yaml
+- kubectl create -f crd
+- kubectl create -f crd/examples/wflow_mg.yml
+- sleep 60
+- kubectl get pods -n yadage
+- kubectl get pods

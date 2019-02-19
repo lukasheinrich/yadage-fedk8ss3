@@ -14,15 +14,11 @@ spec:
     spec:
       containers:
       - name: controller
-        image: python:2.7-alpine
-        command: ["python", "/hooks/sync.py"]
-        volumeMounts:
-        - name: hooks
-          mountPath: /hooks
-      volumes:
-      - name: hooks
-        configMap:
-          name: wflow-controller
+        image: lukasheinrich/yadagecrdctrl
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: YADKUBE_IMAGE
+          value: lukasheinrich/yadkube:citest
 ---
 apiVersion: v1
 kind: Service

@@ -19,5 +19,5 @@ spec:
   backend: kubedirectjob
   visualize: true
   plugins:
-  - yadageextresult.pktbackend
+  - yadagekube.backends
   workflow: workflow.yml

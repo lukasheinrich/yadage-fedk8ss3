@@ -1,5 +1,6 @@
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 import json
+import os
 
 def make_desired(name, spec):
    configname =  "{}-config".format(name)
@@ -31,7 +32,7 @@ def make_desired(name, spec):
                         "command": [
                            "yadage-run","-f","/etc/config/workflow.yml"
                         ],
-                        "image": "lukasheinrich/yadkube",
+                        "image": os.environ['YADKUBE_IMAGE'],
                         "name": "runner",
                         "volumeMounts": [
                            {

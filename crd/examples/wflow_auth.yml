@@ -1,0 +1,16 @@
+apiVersion: yadage.github.io/v1
+kind: Workflow
+metadata:
+  name: myflow
+spec:
+  initdata: {}
+  workflow: workflow.yml
+  toplevel: from-github/testing/atlas_auth
+  backendopts:
+    path_base: /data/
+    kubeconfig: incluster
+    claim_name: mylocal-pvc
+  dataarg: cifwflow-3456
+  backend: kubedirectjob
+  plugins:
+  - yadagekube.backends

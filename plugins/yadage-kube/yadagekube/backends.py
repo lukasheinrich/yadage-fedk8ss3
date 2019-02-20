@@ -15,14 +15,14 @@ from .jobspec import JobSequenceMakerMixin, DirectJobMakerMixin
 log = logging.getLogger(__name__)
 
 try:
-    from yadageexresult.S3ResultStore import S3ResultStore
+    from yadageextresult.S3ResultStore import S3ResultStore
     class RemoteResultExternalBackend(
         JobSequenceMakerMixin,
         ExternalAsyncMixin,
         RemoteResultMixin,
     ):
         def __init__(self, **kwargs):
-            kwargs['job_backend']   = KubernetesBackend(kwargs['resultstore'])
+            kwargs['job_backend']   = KubernetesBackend(resultstore = kwargs['resultstore'])
             kwargs['resultbackend'] = S3ResultStore(kwargs['resultstore'])
             JobSequenceMakerMixin.__init__(self, **kwargs)
             ExternalAsyncMixin.__init__(self,**kwargs)
@@ -33,7 +33,7 @@ try:
         backend = RemoteResultExternalBackend(**backendopts)
         return False, backend
 except ImportError:
-    pass
+    raise
 
 class DirectExternalKubernetesBackend(
     DirectJobMakerMixin,

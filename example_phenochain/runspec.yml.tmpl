@@ -6,7 +6,7 @@ dataopts:
   host: $__HOST__
   local: /work
 
-backend: kubernetes
+backend: kube-extrest-obj
 backendopts:
   purepubopts:
     exec: {logging: false}
@@ -15,10 +15,10 @@ backendopts:
     secret_key: $__SECRETKEY__
     host: $__HOST__
     bucket: $__BUCKET__
-  kubeconfig: $KUBECONFIG
+  kubeconfig: fromenv
 
 plugins:
-- yadageextresult.pktbackend
+- yadagekube.backends
 - yadageobjstore.register_yadage
 - yadageobjstore.register_packtivity
 

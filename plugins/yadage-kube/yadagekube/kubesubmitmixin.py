@@ -11,9 +11,12 @@ class SubmitToKubeMixin(object):
             log.info('load incluster config')
             config.load_incluster_config()
         else:
-            cfg = kwargs.get('kubeconfig', os.path.join(os.environ['HOME'],'.kube/config'))
+            cfg = kwargs.get('kubeconfig')
             log.info('load config %s', cfg)
-            config.load_kube_config(cfg)
+            if not cfg:
+                config.load_kube_config()
+            else:
+                config.load_kube_config(cfg)
             import urllib3
             urllib3.disable_warnings()
 
@@ -80,3 +83,18 @@ class SubmitToKubeMixin(object):
 
     def fail_info(self,resultproxy):
         pass
+
+
+    def check_k8s_job_status(self, name):
+        return client.BatchV1Api().read_namespaced_job(name,self.namespace).status
+
+    def sequence_from_spec(self, mainmounts, configmounts = None):
+        configmounts = configmounts or []
+        mainmounts = mainmounts or []
+        return [{
+          "name": seqname,
+          "image": sequence_spec[seqname]['image'],
+          "command": sequence_spec[seqname]['cmd'],
+          "env": sequence_spec['config_env'] if sequence_spec[seqname]['iscfg'] else [],
+          "volumeMounts":  mainmounts + (configmounts if sequence_spec[seqname]['iscfg'] else [])
+        } for seqname in sequence_spec["sequence"]]

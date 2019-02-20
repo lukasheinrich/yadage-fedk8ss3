@@ -1,5 +1,3 @@
-import os
-import uuid
 import copy
 import json
 import logging
@@ -11,20 +9,8 @@ log = logging.getLogger(__name__)
 
 class KubernetesBackend(SubmitToKubeMixin,KubeSpecMixin):
     def __init__(self,**kwargs):
-        self.svcaccount = kwargs.get('svcaccount','default')
-
-        kwargs.setdefault('namespace','default')
         SubmitToKubeMixin.__init__(self, **kwargs)
         KubeSpecMixin.__init__(self,**kwargs)
-
-        self.specopts   = {'type': 'single_ctr_job'}
-        self.resource_labels = kwargs.get('resource_labels',{'component': 'yadage'})
-        self.resources_opts = kwargs.get('resource_opts',{
-            'requests': {
-                'memory': "0.1Gi",
-                'cpu': "100m"
-            }
-        })
 
         self.ydgconfig =  {
           "resultstorage": kwargs['resultstore']
@@ -48,7 +34,6 @@ class KubernetesBackend(SubmitToKubeMixin,KubeSpecMixin):
             'resources': kube_resources
         }
 
-
     def config(self, job_uuid, jobspec):
         jobconfigname = "wflow-job-config-{}".format(job_uuid)
         resultfilename = 'result-{}.json'.format(job_uuid)
@@ -56,17 +41,12 @@ class KubernetesBackend(SubmitToKubeMixin,KubeSpecMixin):
         jobspec['resultfile'] = resultfilename
 
         resources, vols, mounts = [], [], []
-        resources.append({
-          "apiVersion": "v1",
-          "kind": "ConfigMap",
-          "data": {
+        resources.append(self.get_cm_spec(
+            jobconfigname, {
             "ydgconfig.json": json.dumps(self.ydgconfig),
             "jobconfig.json": json.dumps(jobspec)
-          },
-          "metadata": {
-            "name": jobconfigname
           }
-        })
+        ))
         configvols, configmounts = [
             {"name": "job-config", "configMap": { "name":  jobconfigname}}], [{
             "name": "job-config",

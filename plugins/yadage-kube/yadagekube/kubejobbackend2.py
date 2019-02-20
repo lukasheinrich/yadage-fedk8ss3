@@ -1,7 +1,3 @@
-import os
-import uuid
-import copy
-import json
 import logging
 
 from .kubesubmitmixin import SubmitToKubeMixin
@@ -11,21 +7,8 @@ log = logging.getLogger(__name__)
 
 class KubernetesBackend(SubmitToKubeMixin,KubeSpecMixin):
     def __init__(self,**kwargs):
-        self.svcaccount = kwargs.get('svcaccount','default')
-
-        kwargs.setdefault('namespace','default')
         SubmitToKubeMixin.__init__(self, **kwargs)
         KubeSpecMixin.__init__(self,**kwargs)
-
-        self.specopts   = {'type': 'single_ctr_job'}
-        self.resource_labels = kwargs.get('resource_labels',{'component': 'yadage'})
-        self.resources_opts = kwargs.get('resource_opts',{
-            'requests': {
-                'memory': "0.1Gi",
-                'cpu': "100m"
-            }
-        })
-        self.cvmfs_repos = ['atlas.cern.ch','sft.cern.ch','atlas-condb.cern.ch']
 
         self.base = kwargs.get('path_base','')
         self.claim_name =  kwargs.get('claim_name','yadagedata')
@@ -34,20 +17,12 @@ class KubernetesBackend(SubmitToKubeMixin,KubeSpecMixin):
         container_mounts_state, volumes_state = [],[]
         for i,ro in enumerate(jobspec['state']['readonly']):
             subpath = ro.replace(self.base,'')   
-            ctrmnt = {
-                "name": "state",
-                "mountPath": ro,
-                "subPath": subpath,
-            }
+            ctrmnt = {"name": "state", "mountPath": ro, "subPath": subpath}
             container_mounts_state.append(ctrmnt)
 
         for i,rw in enumerate(jobspec['state']['readwrite']):
             subpath = rw.replace(self.base,'')   
-            ctrmnt = {
-                "name": "state",
-                "mountPath": rw,
-                "subPath": subpath,
-            }
+            ctrmnt = {"name": "state", "mountPath": rw, "subPath": subpath}
             container_mounts_state.append(ctrmnt)
 
         volumes_state.append({
@@ -66,5 +41,5 @@ class KubernetesBackend(SubmitToKubeMixin,KubeSpecMixin):
             'resources': kube_resources
         }
 
-    def config(job_uuid, jobspec):
+    def config(self, job_uuid, jobspec):
         return [], [], []

@@ -6,7 +6,8 @@ log = logging.getLogger(__name__)
 
 class SubmitToKubeMixin(object):
     def __init__(self, **kwargs):
-        self.namespace = kwargs['namespace']
+        self.svcaccount = kwargs.get('svcaccount','default')
+        self.namespace = kwargs.get('namespace','default')
         if kwargs.get('kubeconfig') == 'incluster':
             log.info('load incluster config')
             config.load_incluster_config()

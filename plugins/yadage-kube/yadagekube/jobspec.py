@@ -94,10 +94,6 @@ class DirectJobMakerMixin(object):
         pass
 
     def render_process(self, spec, state, metadata, local_pars):
-        log.debug('param object %s', local_pars)
-        log.debug('local pars: \n%s',json.dumps(local_pars.json(), indent=4))
-        log.debug('rendering process with local pars:  {}'.format(local_pars.json()))
-
         job, env = acquire_job_env(spec, local_pars,state,metadata,packconfig())
         script = '''cat << 'RECASTJOB' | {}\n{}\nRECASTJOB\n'''
         return {

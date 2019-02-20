@@ -8,6 +8,13 @@ class KubeSpecMixin(object):
         self.cvmfs_repos = ['atlas.cern.ch','sft.cern.ch','atlas-condb.cern.ch']
         self.secrets = kwargs.get('secrets', {'hepauth': 'hepauth'})
         self.authmount = '/recast_auth'
+        self.resource_labels = kwargs.get('resource_labels',{'component': 'yadage'})
+        self.resource_opts = kwargs.get('resource_opts',{
+            'requests': {
+                'memory': "0.1Gi",
+                'cpu': "100m"
+            }
+        })
 
     def auth_binds(self,authmount = None):
         container_mounts = []
@@ -141,11 +148,24 @@ class KubeSpecMixin(object):
             volumes = volumes
         )
 
+    def get_cm_spec(self, cmname, data):
+        return {
+          "apiVersion": "v1",
+          "kind": "ConfigMap",
+          "data": data,
+          "metadata": {
+            "name": cmname,
+            "labels": self.resource_labels
+          }
+        }
+
     def get_job_spec(self, jobname, initContainers = None, containers = None, volumes = None):
         containers = containers or []
         initContainers = initContainers or []
         volumes = volumes or []
-        return {
+        for x in containers + initContainers:
+            x['resources'] = self.resource_opts
+        job = {
           "apiVersion": "batch/v1",
           "kind": "Job",
           "spec": {
@@ -163,8 +183,10 @@ class KubeSpecMixin(object):
               "metadata": { "name": jobname }
             }
           },
-          "metadata": { "name": jobname }
-    }
+          "metadata": { "name": jobname,  "labels": self.resource_labels}
+        }
+        job['spec']['template']['spec']
+        return job
 
     def plan_kube_resources(self, jobspec):
         job_uuid = str(uuid.uuid4())

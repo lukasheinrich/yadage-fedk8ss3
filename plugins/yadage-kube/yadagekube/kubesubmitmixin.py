@@ -98,3 +98,22 @@ class SubmitToKubeMixin(object):
           "env": sequence_spec['config_env'] if sequence_spec[seqname]['iscfg'] else [],
           "volumeMounts":  mainmounts + (configmounts if sequence_spec[seqname]['iscfg'] else [])
         } for seqname in sequence_spec["sequence"]]
+
+    
+    def determine_readiness(self, job_proxy):
+        ready = job_proxy.get('ready',False)
+        if ready:
+            return True
+
+        log.debug('actually checking job %s', job_proxy['job_id'])
+
+        job_id  = job_proxy['job_id']
+        jobstatus = self.check_k8s_job_status(job_id)
+        job_proxy['last_success'] = jobstatus.succeeded
+        job_proxy['last_failed']  = jobstatus.failed
+        ready =  job_proxy['last_success'] or job_proxy['last_failed']
+        if ready:
+            log.debug('job %s is ready and successful. success: %s failed: %s', job_id,
+                job_proxy['last_success'], job_proxy['last_failed']
+            )
+        return ready

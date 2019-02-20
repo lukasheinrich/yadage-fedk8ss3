@@ -30,24 +30,6 @@ class KubernetesBackend(SubmitToKubeMixin,KubeSpecMixin):
         self.base = kwargs.get('path_base','')
         self.claim_name =  kwargs.get('claim_name','yadagedata')
 
-    def determine_readiness(self, job_proxy):
-        ready = job_proxy.get('ready',False)
-        if ready:
-            return True
-
-        log.debug('actually checking job %s', job_proxy['job_id'])
-
-        job_id  = job_proxy['job_id']
-        jobstatus = self.check_k8s_job_status(job_id)
-        job_proxy['last_success'] = jobstatus.succeeded
-        job_proxy['last_failed']  = jobstatus.failed
-        ready =  job_proxy['last_success'] or job_proxy['last_failed']
-        if ready:
-            log.debug('job %s is ready and successful. success: %s failed: %s', job_id,
-                job_proxy['last_success'], job_proxy['last_failed']
-            )
-        return ready
-
     def state_mounts_and_vols(self, jobspec):
         container_mounts_state, volumes_state = [],[]
         for i,ro in enumerate(jobspec['state']['readonly']):
@@ -77,45 +59,12 @@ class KubernetesBackend(SubmitToKubeMixin,KubeSpecMixin):
         })
         return container_mounts_state, volumes_state
 
-    def plan_kube_resources(self, jobspec):
-        job_uuid = str(uuid.uuid4())
-
-        kube_resources = []
-
-        env           = jobspec['spec']['environment']
-        cvmfs         = 'CVMFS' in env['resources']
-        parmounts     = env['par_mounts']
-        auth          = 'GRIDProxy' in env['resources']
-        sequence_spec = jobspec['sequence_spec']
-
-        container_mounts, volumes = [], []
-
-        container_mounts_state, volumes_state = self.state_mounts_and_vols(jobspec)
-
-        container_mounts += container_mounts_state
-        volumes          += volumes_state
-
-        resources, mounts, vols = self.get_job_mounts(cvmfs, auth, parmounts)
-        container_mounts += mounts
-        volumes += vols
-        kube_resources += resources
-
+    def proxy_data(self, job_uuid, kube_resources):
         jobname = "wflow-job-{}".format(job_uuid)
-        config_mounts = []
-
-        container_sequence = self.container_sequence_fromspec(
-            sequence_spec, mainmounts = container_mounts, configmounts = config_mounts
-        )
-        
-        jobspec = self.get_job_spec_for_sequence(jobname,
-            sequence = container_sequence,
-            volumes = volumes
-        )
-        kube_resources.append(jobspec)
-
-        log.debug(json.dumps(kube_resources, indent = 4))
-        proxy_data = {
+        return {
             'job_id': jobname,
             'resources': kube_resources
         }
-        return proxy_data, kube_resources
+
+    def config(job_uuid, jobspec):
+        return [], [], []

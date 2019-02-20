@@ -1,4 +1,6 @@
 import logging
+import uuid
+
 log = logging.getLogger(__name__)
 
 class KubeSpecMixin(object):
@@ -90,7 +92,11 @@ class KubeSpecMixin(object):
             })
         return parmount_configmap_contmount, vols_by_dir_name.values(), configmapspec
 
-    def get_job_mounts(self, cvmfs, auth, parmounts):
+    def get_job_mounts(self, jobspec_environment):
+        cvmfs         = 'CVMFS' in jobspec_environment['resources']
+        parmounts     = jobspec_environment['par_mounts']
+        auth          = 'GRIDProxy' in jobspec_environment['resources']
+
         kube_resources = []
         container_mounts = []
         volumes = []
@@ -159,3 +165,35 @@ class KubeSpecMixin(object):
           },
           "metadata": { "name": jobname }
     }
+
+    def plan_kube_resources(self, jobspec):
+        job_uuid = str(uuid.uuid4())
+        kube_resources, container_mounts, volumes = [], [], []
+
+        container_mounts_state, volumes_state = self.state_mounts_and_vols(jobspec)
+        container_mounts += container_mounts_state
+        volumes          += volumes_state
+
+        resources, mounts, vols = self.get_job_mounts(jobspec['spec']['environment'])
+        container_mounts += mounts
+        volumes += vols
+        kube_resources += resources
+
+        jobname = "wflow-job-{}".format(job_uuid)
+
+        config_resources, config_vols, config_mounts = self.config(job_uuid, jobspec)
+        kube_resources += config_resources
+        volumes = volumes + config_vols
+        
+        container_sequence = self.container_sequence_fromspec(
+            jobspec['sequence_spec'], mainmounts = container_mounts, configmounts = config_mounts
+        )
+
+
+        jobspec = self.get_job_spec_for_sequence(jobname,
+            sequence = container_sequence,
+            volumes = volumes
+        )
+        proxy_data = self.proxy_data(job_uuid, kube_resources)
+        kube_resources.append(jobspec)
+        return proxy_data, kube_resources

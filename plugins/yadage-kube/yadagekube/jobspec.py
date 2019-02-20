@@ -79,8 +79,8 @@ class JobSequenceMakerMixin(object):
             "local_workdir": state.local_workdir,
             "local_pars": local_pars.json(),
             #... 
-            "spec": spec,
             "parameters": jsonpars,
+            "spec": spec,
             "state": state.json(),
         }
 
@@ -130,6 +130,7 @@ class DirectJobMakerMixin(object):
                         ])
                 },
             },
+            #....
             "spec": spec,
             "state": state.json(),
         }

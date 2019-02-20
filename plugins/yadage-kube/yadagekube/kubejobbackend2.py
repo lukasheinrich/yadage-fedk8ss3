@@ -48,6 +48,35 @@ class KubernetesBackend(SubmitToKubeMixin,KubeSpecMixin):
             )
         return ready
 
+    def state_mounts_and_vols(self, jobspec):
+        container_mounts_state, volumes_state = [],[]
+        for i,ro in enumerate(jobspec['state']['readonly']):
+            subpath = ro.replace(self.base,'')   
+            ctrmnt = {
+                "name": "state",
+                "mountPath": ro,
+                "subPath": subpath,
+            }
+            container_mounts_state.append(ctrmnt)
+
+        for i,rw in enumerate(jobspec['state']['readwrite']):
+            subpath = rw.replace(self.base,'')   
+            ctrmnt = {
+                "name": "state",
+                "mountPath": rw,
+                "subPath": subpath,
+            }
+            container_mounts_state.append(ctrmnt)
+
+        volumes_state.append({
+            "name": "state",
+            "persistentVolumeClaim": {
+                "claimName": self.claim_name,
+                "readOnly": False
+            }
+        })
+        return container_mounts_state, volumes_state
+
     def plan_kube_resources(self, jobspec):
         job_uuid = str(uuid.uuid4())
 
@@ -61,33 +90,10 @@ class KubernetesBackend(SubmitToKubeMixin,KubeSpecMixin):
 
         container_mounts, volumes = [], []
 
+        container_mounts_state, volumes_state = self.state_mounts_and_vols(jobspec)
 
-
-        for i,ro in enumerate(jobspec['state']['readonly']):
-            subpath = ro.replace(self.base,'')   
-            ctrmnt = {
-                "name": "state",
-                "mountPath": ro,
-                "subPath": subpath,
-            }
-            container_mounts.append(ctrmnt)
-
-        for i,rw in enumerate(jobspec['state']['readwrite']):
-            subpath = rw.replace(self.base,'')   
-            ctrmnt = {
-                "name": "state",
-                "mountPath": rw,
-                "subPath": subpath,
-            }
-            container_mounts.append(ctrmnt)
-
-        volumes.append({
-            "name": "state",
-            "persistentVolumeClaim": {
-                "claimName": self.claim_name,
-                "readOnly": False
-            }
-        })
+        container_mounts += container_mounts_state
+        volumes          += volumes_state
 
         resources, mounts, vols = self.get_job_mounts(cvmfs, auth, parmounts)
         container_mounts += mounts
@@ -95,8 +101,11 @@ class KubernetesBackend(SubmitToKubeMixin,KubeSpecMixin):
         kube_resources += resources
 
         jobname = "wflow-job-{}".format(job_uuid)
+        config_mounts = []
 
-        container_sequence = self.container_sequence_fromspec(sequence_spec, mainmounts = container_mounts)
+        container_sequence = self.container_sequence_fromspec(
+            sequence_spec, mainmounts = container_mounts, configmounts = config_mounts
+        )
         
         jobspec = self.get_job_spec_for_sequence(jobname,
             sequence = container_sequence,

@@ -48,6 +48,35 @@ class KubernetesBackend(SubmitToKubeMixin,KubeSpecMixin):
             )
         return ready
 
+    def state_mounts_and_vols(self, jobspec):
+        return [
+            { "name": "comms-volume",   "mountPath": jobspec['sequence_spec']['config_mounts']['comms'] },
+            { "name": "workdir-volume", "mountPath": jobspec['local_workdir'] }
+        ], [
+            { "name": "workdir-volume", "emptyDir": {} },
+            { "name": "comms-volume",   "emptyDir": {} }
+        ]
+
+    def config(self, configname, jobspec):
+        resources, vols, mounts = [], [], []
+        resources.append({
+          "apiVersion": "v1",
+          "kind": "ConfigMap",
+          "data": {
+            "ydgconfig.json": json.dumps(self.ydgconfig),
+            "jobconfig.json": json.dumps(jobspec)
+          },
+          "metadata": {
+            "name": configname
+          }
+        })
+        configvols, configmounts = [
+            {"name": "job-config", "configMap": { "name":  configname}}], [{
+            "name": "job-config",
+            "mountPath": jobspec['sequence_spec']['config_mounts']['jobconfig']
+        }]
+        return resources, vols, mounts
+
     def plan_kube_resources(self, jobspec):
         job_uuid = str(uuid.uuid4())
 
@@ -56,18 +85,12 @@ class KubernetesBackend(SubmitToKubeMixin,KubeSpecMixin):
         env           = jobspec['spec']['environment']
         cvmfs         = 'CVMFS' in env['resources']
         parmounts     = env['par_mounts']
-        auth          = 'GRIProxy' in env['resources']
+        auth          = 'GRIDProxy' in env['resources']
         sequence_spec = jobspec['sequence_spec']
 
         container_mounts, volumes = [], []
 
-        container_mounts_state, volumes_state = [
-            { "name": "comms-volume",   "mountPath": sequence_spec['config_mounts']['comms'] },
-            { "name": "workdir-volume", "mountPath": jobspec['local_workdir'] }
-        ], [
-            { "name": "workdir-volume", "emptyDir": {} },
-            { "name": "comms-volume",   "emptyDir": {} }
-        ]
+        container_mounts_state, volumes_state = self.state_mounts_and_vols(jobspec)
 
         container_mounts += container_mounts_state
         volumes          += volumes_state
@@ -77,37 +100,24 @@ class KubernetesBackend(SubmitToKubeMixin,KubeSpecMixin):
         volumes += vols
         kube_resources += resources
 
-
-        jobconfigname = "wflow-job-config-{}".format(job_uuid)
         jobname = "wflow-job-{}".format(job_uuid)
+
+        #---
+        jobconfigname = "wflow-job-config-{}".format(job_uuid)
         resultfilename = 'result-{}.json'.format(job_uuid)
 
         jobconfig = copy.deepcopy(jobspec)
         jobconfig['resultfile'] = resultfilename
 
-        kube_resources.append({
-          "apiVersion": "v1",
-          "kind": "ConfigMap",
-          "data": {
-            "ydgconfig.json": json.dumps(self.ydgconfig),
-            "jobconfig.json": json.dumps(jobconfig)
-          },
-          "metadata": {
-            "name": jobconfigname
-          }
-        })
-
-        configvols, configmounts = [
-            {"name": "job-config", "configMap": { "name": jobconfigname }}], [{
-            "name": "job-config",
-            "mountPath": sequence_spec['config_mounts']['jobconfig']
-        }]
+        config_resources, config_vols, config_mounts = self.config(jobconfigname, jobspec)
+        kube_resources += config_resources
+        volumes = volumes + config_vols
+        #---
 
         container_sequence = self.container_sequence_fromspec(
-            sequence_spec, mainmounts = container_mounts, configmounts = configmounts
+            sequence_spec, mainmounts = container_mounts, configmounts = config_mounts
         )
 
-        volumes = volumes + configvols
 
         jobspec = self.get_job_spec_for_sequence(jobname,
             sequence = container_sequence,

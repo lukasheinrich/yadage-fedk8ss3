@@ -1,3 +1,6 @@
+import logging
+log = logging.getLogger(__name__)
+
 class KubeSpecMixin(object):
     def __init__(self, **kwargs):
         self.cvmfs_repos = ['atlas.cern.ch','sft.cern.ch','atlas-condb.cern.ch']
